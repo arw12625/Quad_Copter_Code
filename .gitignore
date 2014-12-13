@@ -1,5 +1,5 @@
 *.atsln
 *.atsuo
 *.cppproj
-/Debug/
-"Visual Micro"/
+Debug/
+Visual\ Micro/
