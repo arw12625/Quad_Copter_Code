@@ -3,3 +3,6 @@
 *.cppproj
 Debug/
 Visual\ Micro/
+nbproject/
+build.xml
+manifest.mf
