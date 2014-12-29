@@ -13,6 +13,7 @@ import java.io.IOException;
  */
 public interface SerialAction {
 
+    public void open();
     public void run(BufferedReader input) throws IOException;
-    public void close() throws IOException;
+    public void close();
 }

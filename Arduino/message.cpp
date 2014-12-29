@@ -2,51 +2,89 @@
 #include "Parsing.h"
 
 
-byte read_message(struct message_t *message) {
-	byte body_length;
 
-	switch (message->state) {
-		case WAITING_FOR_LENGTH: {
-			if (Serial.available() > 0) {
-				char c = Serial.read();
-				if(c != ' ') {
+void messageError(message_t *mes) {
+	Serial.println("ERROR");
+}
+
+byte body_index;
+byte body_length;
+
+byte read_message(struct message_t *message) {
+
+	while(Serial.available() && message->state != MESSAGE_READY) {
+		
+		char c = Serial.read();
+		
+		switch (message->state) {
+			case WAITING_FOR_BEGIN: {
+				if(c == BEGIN_CHAR) {
+					message->state = WAITING_FOR_LENGTH;
+				}
+				break;
+			}
+			case WAITING_FOR_LENGTH: {
+				if(0<c-'0' && c-'0'<MAX_MESSAGE_LENGTH) {
 					message->data.header.length = c - '0';
+					body_length = message->data.header.length - sizeof(message->data.header);
+					body_index = 0;
 					message->state = WAITING_FOR_ACTION;
+				} else {
+					message->state = ERROR;
 				}
+				break;
 			}
-			break;
-		}
-		case WAITING_FOR_ACTION: {
-			if (Serial.available() > 0) {
-				message->data.header.action = Serial.read();
-				message->state = WAITING_FOR_MESSAGE;
+			case WAITING_FOR_ACTION: {
+				message->data.header.action = c;
+				message->state = WAITING_FOR_BODY;
+				break;
 			}
-			break;
-		}
-		case WAITING_FOR_MESSAGE: {
-			body_length = message->data.header.length - sizeof(message->data.header);
-			if (Serial.available() >= body_length) {
-				for (byte i=0; i<body_length; ++i) {
-					message->data.body[i] = Serial.read();
+			case WAITING_FOR_BODY: {
+				if (body_index < body_length) {
+					message->data.body[body_index++] = c;
 				}
-				message->state = MESSAGE_READY;
+				if (body_index == body_length) {
+					message->state = WAITING_FOR_END;
+				}
+				break;
 			}
-			break;
+			case WAITING_FOR_END: {
+				if(c == END_CHAR) {
+					message->state = MESSAGE_READY;
+				} else {
+					message->state = ERROR;
+				}
+				break;
+			}
+			case MESSAGE_READY: {
+				/** Do nothing if the message is ready */
+				break;
+			}
 		}
-		case MESSAGE_READY:
-		/** Do nothing if the message is ready */
-		break;
+		if(message->state == ERROR) {
+			messageError(message);
+			message->state = WAITING_FOR_BEGIN;
+		}
 	}
 	return message->state == MESSAGE_READY;
 }
 
 void init_messages(void) {
 	Serial.begin(BAUD_RATE);
+	delay(1000);
+	for(int i = 0; i < 3; i++) {
+		Serial.print("!");
+		delay(1000);
+	}
+	Serial.println();
+	 
 }
 
 message_t message;
 void update_messages(void) {
 	if (read_message(&message)) {
+		Serial.println("Message Read");
 		process_message(&message);
+		message.state = WAITING_FOR_BEGIN;
 	}
 }

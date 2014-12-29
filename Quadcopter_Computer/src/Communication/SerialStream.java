@@ -12,11 +12,8 @@ import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import java.io.*;
-import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class SerialStream implements SerialPortEventListener {
 
@@ -43,13 +40,17 @@ public class SerialStream implements SerialPortEventListener {
     /**
      * Default bits per second for COM port.
      */
-    private static final int DATA_RATE = 9600;
+    private int DATA_RATE = 9600;
     //The maximum message size
-    private static final int DATA_SIZE = 128;
+    private static final int MAX_DATA_SIZE = 256;
     //A list of actions to perform on a serial event
     private ArrayList<SerialAction> actions;
 
-    public void initialize() {
+    public void initialize(int baud) {
+        DATA_RATE = baud;
+        actions = new ArrayList<SerialAction>();
+
+
         // the next line is for Raspberry Pi and 
         // gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
         System.setProperty("gnu.io.rxtx.SerialPorts", "COM5");
@@ -91,7 +92,6 @@ public class SerialStream implements SerialPortEventListener {
             serialPort.addEventListener(this);
             serialPort.notifyOnDataAvailable(true);
 
-            actions = new ArrayList<SerialAction>();
         } catch (Exception e) {
             System.err.println(e.toString());
         }
@@ -106,12 +106,8 @@ public class SerialStream implements SerialPortEventListener {
             serialPort.removeEventListener();
             serialPort.close();
         }
-        for(SerialAction sa : actions) {
-            try {
-                sa.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+        for (SerialAction sa : actions) {
+            sa.close();
         }
     }
 
@@ -122,7 +118,7 @@ public class SerialStream implements SerialPortEventListener {
     public synchronized void serialEvent(SerialPortEvent oEvent) {
         if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
             try {
-                input.mark(DATA_SIZE);
+                input.mark(MAX_DATA_SIZE);
                 for (SerialAction sa : actions) {
                     input.reset();
                     sa.run(input);
@@ -143,27 +139,27 @@ public class SerialStream implements SerialPortEventListener {
             ex.printStackTrace();
         }
     }
-    
+
     public synchronized void sendLine(String line) {
         sendBytes(line.getBytes());
     }
 
     public synchronized void sendLines(String[] lines) {
-        for(String s : lines) {
+        for (String s : lines) {
             sendLine(s);
         }
     }
-    
+
     public synchronized byte[] readBytes() {
         byte[] byteArray = null;
         try {
             ArrayList<Byte> list = new ArrayList<Byte>();
-            input.mark(DATA_SIZE);
-            while(input.ready()) {
-                list.add((byte)input.read());
+            input.mark(MAX_DATA_SIZE);
+            while (input.ready()) {
+                list.add((byte) input.read());
             }
             byteArray = new byte[list.size()];
-            for(int i = 0; i < byteArray.length; i++) {
+            for (int i = 0; i < byteArray.length; i++) {
                 byteArray[i] = list.get(i);
             }
             input.reset();
@@ -173,17 +169,17 @@ public class SerialStream implements SerialPortEventListener {
         }
         return byteArray;
     }
-    
+
     public synchronized String[] readLines() {
         String[] lineArray = null;
         try {
             ArrayList<String> list = new ArrayList<String>();
-            input.mark(DATA_SIZE);
-            while(input.ready()) {
+            input.mark(MAX_DATA_SIZE);
+            while (input.ready()) {
                 list.add(input.readLine());
             }
             lineArray = new String[list.size()];
-            for(int i = 0; i < lineArray.length; i++) {
+            for (int i = 0; i < lineArray.length; i++) {
                 lineArray[i] = list.get(i);
             }
             input.reset();
@@ -193,8 +189,9 @@ public class SerialStream implements SerialPortEventListener {
         }
         return lineArray;
     }
-    
+
     public void addSerialAction(SerialAction sa) {
         actions.add(sa);
+        sa.open();
     }
 }

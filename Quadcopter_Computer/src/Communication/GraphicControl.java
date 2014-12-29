@@ -23,28 +23,14 @@ public class GraphicControl extends JFrame {
     JTextArea outputText;
     JTextArea inputText;
     SerialStream serial;
+    UserInputParser inputParser;
     public boolean exit;
 
     public GraphicControl() {
         serial = new SerialStream();
-        serial.initialize();
-        AngleLogger at = new AngleLogger("res/angle1.txt");
-        serial.addSerialAction(at);
-        serial.addSerialAction(new SerialAction() {
-
-            @Override
-            public void run(BufferedReader input) throws IOException {
-                while (input.ready()) {
-                    processOutput(input.readLine());
-                }
-
-            }
-
-            @Override
-            public void close() throws IOException {
-            }
-        });
-
+        serial.initialize(115200);
+        inputParser = new UserInputParser(serial);
+        
         setVisible(true);
         setTitle("Quadcontrol");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -64,6 +50,8 @@ public class GraphicControl extends JFrame {
         c.insets = new Insets(0, 10, 0, 10);
         inputText = new JTextArea(1, 66);
         inputText.setFont(new Font("Courier New", Font.PLAIN, 16));
+        
+        
         inputText.addKeyListener(new KeyAdapter() {
 
             @Override
@@ -77,23 +65,35 @@ public class GraphicControl extends JFrame {
                 }
             }
         });
+        
+        
         JScrollPane inputScroll = new JScrollPane(inputText, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         con.add(inputScroll, c);
 
 
         pack();
         setSize(800, 640);
+        
+        serial.addSerialAction(new SerialAction() {
+            @Override
+            public void open() {
+            }
+            @Override
+            public void run(BufferedReader input) throws IOException {
+                while(input.ready()) {
+                    processOutput(input.readLine());
+                }
+            }
+            @Override
+            public void close() {
+            }
+        });
+        
     }
-    public static final String[] exitWords = {"exit", "quit"};
 
     public void processInput(String text) {
         text = text.trim();
-        for (String w : exitWords) {
-            if (text.toLowerCase().equals(w)) {
-                exit = true;
-            }
-        }
-        serial.sendLine(text);
+        inputParser.parseMessage(text);
     }
 
     public void processOutput(String text) {

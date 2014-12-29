@@ -5,6 +5,8 @@
 package Communication;
 
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -12,16 +14,11 @@ import java.io.*;
  */
 public class AngleLogger implements SerialAction {
 
+    String outputPath;
     BufferedWriter out;
 
     public AngleLogger(String outputPath) {
-        try {
-            out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath), "utf-8"));
-            out.append("Angle Values\n");
-            out.append("X\tY\tZ\t\n");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        this.outputPath = outputPath;
     }
 
     @Override
@@ -45,7 +42,22 @@ public class AngleLogger implements SerialAction {
     }
 
     @Override
-    public void close() throws IOException {
-        out.close();
+    public void close(){
+        try {
+            out.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void open() {
+        try {
+            out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath), "utf-8"));
+            out.append("Angle Values\n");
+            out.append("X\tY\tZ\t\n");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

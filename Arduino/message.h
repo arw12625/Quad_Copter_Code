@@ -11,12 +11,17 @@
 #define MAX_MESSAGE_LENGTH 32
 #define BAUD_RATE 115200
 #define MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
+#define BEGIN_CHAR '~'
+#define END_CHAR '~'
 
 enum message_state_t {
+  WAITING_FOR_BEGIN,
   WAITING_FOR_LENGTH,
   WAITING_FOR_ACTION,
-  WAITING_FOR_MESSAGE,
-  MESSAGE_READY
+  WAITING_FOR_BODY,
+  WAITING_FOR_END,
+  MESSAGE_READY,
+  ERROR
 };
 
 struct message_data_t {

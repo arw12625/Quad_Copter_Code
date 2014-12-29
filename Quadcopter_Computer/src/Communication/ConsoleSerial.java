@@ -18,7 +18,7 @@ public class ConsoleSerial {
     public static void main(String[] args) throws Exception {
 
         final SerialStream serial = new SerialStream();
-        serial.initialize();
+        serial.initialize(115200);
         final AngleLogger at = new AngleLogger("res/angle1.txt");
         serial.addSerialAction(at);
         Thread t = new Thread() {

@@ -14,6 +14,10 @@ import java.io.IOException;
 public class PrintSerial implements SerialAction {
 
     @Override
+    public void open() {
+    }
+    
+    @Override
     public void run(BufferedReader input) throws IOException {
         while(input.ready()) {
             System.out.println(input.readLine());
@@ -21,7 +25,7 @@ public class PrintSerial implements SerialAction {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close(){
         System.out.println("Print Serial closing");
     }
     

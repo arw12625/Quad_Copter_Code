@@ -3,7 +3,7 @@
 #ifndef _INERTIALSENSORMANAGER_h
 #define _INERTIALSENSORMANAGER_h
 
-#include "MinIMU9AHRS.h"
+//#include "MinIMU9AHRS.h"
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "Arduino.h"
@@ -17,7 +17,7 @@ union Orientation {
 		float yaw;
 		float roll;
 	};
-	float pyr[4];
+	float pyr[3];
 };
 
 extern Orientation eulerOr;

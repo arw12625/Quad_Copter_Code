@@ -9,27 +9,24 @@
 	#include "WProgram.h"
 #endif
 
-#include <Servo.h>
-
 #define NUM_MOTORS 4
 
+#include <Servo.h>
 
 struct motor_t {
-	byte value;
-	byte pin;
+	int value;
+	int pin;
 	Servo esc;
 };
 
-union motor_union{
+union motor_union {
 	struct {
 		motor_t* back_right;
 		motor_t* front_right;
 		motor_t* back_left;
 		motor_t* front_left;
 	};
-	struct {
-		motor_t* numbered[NUM_MOTORS];
-	};
+	motor_t* numbered[NUM_MOTORS];
 };
 
 extern motor_union motors;
