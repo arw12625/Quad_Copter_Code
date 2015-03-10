@@ -22,7 +22,7 @@ public class SerialStream implements SerialPortEventListener {
      * The port we're normally going to use.
      */
     private static final String PORT_NAMES[] = {
-        "COM5", // Windows
+        "COM4", // Windows
     };
     /**
      * A BufferedReader which will be fed by a InputStreamReader converting the
@@ -46,14 +46,14 @@ public class SerialStream implements SerialPortEventListener {
     //A list of actions to perform on a serial event
     private ArrayList<SerialAction> actions;
 
-    public void initialize(int baud) {
+    public boolean initialize(int baud) {
         DATA_RATE = baud;
         actions = new ArrayList<SerialAction>();
 
 
         // the next line is for Raspberry Pi and 
         // gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
-        System.setProperty("gnu.io.rxtx.SerialPorts", "COM5");
+        System.setProperty("gnu.io.rxtx.SerialPorts", "COM4");
 
         CommPortIdentifier portId = null;
         Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
@@ -61,6 +61,7 @@ public class SerialStream implements SerialPortEventListener {
         //First, Find an instance of serial port as set in PORT_NAMES.
         while (portEnum.hasMoreElements()) {
             CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
+            System.out.println(currPortId.getName());
             for (String portName : PORT_NAMES) {
                 if (currPortId.getName().equals(portName)) {
                     portId = currPortId;
@@ -70,7 +71,7 @@ public class SerialStream implements SerialPortEventListener {
         }
         if (portId == null) {
             System.out.println("Could not find COM port.");
-            return;
+            return false;
         }
 
         try {
@@ -94,7 +95,9 @@ public class SerialStream implements SerialPortEventListener {
 
         } catch (Exception e) {
             System.err.println(e.toString());
+            return false;
         }
+        return true;
     }
 
     /**
